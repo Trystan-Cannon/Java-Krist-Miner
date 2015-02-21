@@ -56,7 +56,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         
         setLayout (new FlowLayout (FlowLayout.LEADING, 30, 10));
         
-        minerID_fieldLabel = new JLabel ("Krist Address");
+        minerID_fieldLabel = new JLabel ("Krist address");
         minerID_textField  = new JTextField (21);
         
         balanceTextField = new JTextField (21);
@@ -271,3 +271,4 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         }
     }
 }
+
