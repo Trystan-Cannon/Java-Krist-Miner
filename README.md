@@ -11,6 +11,8 @@ usage and make use of less cores if your usage gets too high.
 
 I HOLD NO RESPONSIBILITY FOR WHAT YOU DO WITH THIS SOFTWARE. IF YOUR COMPUTER MELTS IN ITS CASE, IT'S YOUR FAULT, NOT MINE.
 
+Monitor the temperature of your chip. Make sure that it is within a safe range. If you don't know the safe range, use Google. I'm serious. You can cause some harm to your hardware if you let it run too quickly without proper cooling.
+
 As always, you're welcome to use this software as you please. Simply give credit where credit is due.
 
 # User Instructions
