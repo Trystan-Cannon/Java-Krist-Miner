@@ -56,7 +56,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         
         setLayout (new FlowLayout (FlowLayout.LEADING, 30, 10));
         
-        minerID_fieldLabel = new JLabel ("Miner ID");
+        minerID_fieldLabel = new JLabel ("Krist Address");
         minerID_textField  = new JTextField (21);
         
         balanceTextField = new JTextField (21);
@@ -92,6 +92,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         coreUseCheckBoxes.get (0).setSelected (true);
         coreUseCheckBoxes.get (0).setEnabled (false);
         
+        miningSleepTimerTextField.setText ("0");
         balanceTextField.setEditable (false);
         
         outputTextArea.setEditable (false);
@@ -176,7 +177,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
                 outputTextArea.setText ("");
                 
                 // Update the balance field.
-                balanceTextField.setText ("Balance: " + Utils.getBalance (minerID_textField.getText()) + " krist");
+                balanceTextField.setText ("Balance: " + Utils.getBalance (minerID_textField.getText()) + " KST");
                 startMining();
             }
         }
