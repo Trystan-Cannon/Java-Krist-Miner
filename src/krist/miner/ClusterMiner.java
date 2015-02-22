@@ -41,18 +41,6 @@ public class ClusterMiner implements Runnable
             }
             
             newBlock = Utils.subSHA256 (minerID + block + nonce, 12);
-            
-            try
-            {
-                Thread.sleep (gui.getSleepTime());
-            }
-            catch (InterruptedException exception)
-            {
-                gui.addOutputLine ("Thread sleep error\nencountered. Stopping.");
-                gui.stopMining();
-                
-                return;
-            }
         }
         
         if (newBlock.compareTo (block) < 0)

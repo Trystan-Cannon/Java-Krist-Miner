@@ -22,7 +22,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
     public static final int MAX_CORES = Math.max ((int) (Runtime.getRuntime().availableProcessors() / (3D/2D)), 1);
     
     public static final int WINDOW_WIDTH  = 300;
-    public static final int WINDOW_HEIGHT = 460;
+    public static final int WINDOW_HEIGHT = 400;
     
     public static int nonceOffset = 1000000;
     
@@ -34,9 +34,6 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
     public JTextField minerID_textField = null;
     
     public JTextField balanceTextField = null;
-    
-    public JLabel miningSleepTimerLabel         = null;
-    public JTextField miningSleepTimerTextField = null;
     
     public JTextArea   outputTextArea   = null;
     public JScrollPane outputScrollPane = null;
@@ -56,13 +53,10 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         
         setLayout (new FlowLayout (FlowLayout.LEADING, 30, 10));
         
-        minerID_fieldLabel = new JLabel ("Krist address");
+        minerID_fieldLabel = new JLabel ("Krist Address");
         minerID_textField  = new JTextField (21);
         
         balanceTextField = new JTextField (21);
-        
-        miningSleepTimerLabel     = new JLabel ("Sleep time (ms)");
-        miningSleepTimerTextField = new JTextField (21);
         
         outputTextArea   = new JTextArea (10, 20);
         outputScrollPane = new JScrollPane (outputTextArea);
@@ -92,7 +86,6 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         coreUseCheckBoxes.get (0).setSelected (true);
         coreUseCheckBoxes.get (0).setEnabled (false);
         
-        miningSleepTimerTextField.setText ("0");
         balanceTextField.setEditable (false);
         
         outputTextArea.setEditable (false);
@@ -111,8 +104,6 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         
         add (minerID_fieldLabel);
         add (minerID_textField);
-        add (miningSleepTimerLabel);
-        add (miningSleepTimerTextField);
         add (balanceTextField);
         add (beginMiningButton);
         add (stopMiningButton);
@@ -212,23 +203,6 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         return minerID_textField.getText().length() == 0 ? "N\\A" : minerID_textField.getText();
     }
     
-    public int getSleepTime()
-    {
-        String sleepTime = miningSleepTimerTextField.getText();
-        
-        try
-        {
-            int sleepTimer = Integer.parseInt (sleepTime);
-            return sleepTimer;
-        }
-        catch (NumberFormatException exception)
-        {
-            miningSleepTimerTextField.setText ("Invalid time.");
-        }
-        
-        return 0;
-    }
-    
     public boolean isMining()
     {
         return isMining;
@@ -271,4 +245,3 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         }
     }
 }
-
