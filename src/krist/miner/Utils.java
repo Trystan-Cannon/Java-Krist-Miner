@@ -13,8 +13,9 @@ import java.util.ArrayList;
 
 public class Utils
 {
-    public static final String LAST_BLOCK_LINK   = "http://65.26.252.225/quest/dia/krist/index.php?lastblock";
-    public static final String BALANCE_LINK_BASE = "http://65.26.252.225/quest/dia/krist/index.php?getbalance=";
+    private static final String KRIST_SYNC_LINK   = getPage ("https://raw.githubusercontent.com/BTCTaras/kristwallet/master/staticapi/syncNode").get (0) + "?";
+    private static final String LAST_BLOCK_LINK   = KRIST_SYNC_LINK + "lastblock";
+    private static final String BALANCE_LINK_BASE = KRIST_SYNC_LINK + "getbalance=";
     
     public static String getLastBlock()
     {
@@ -37,7 +38,7 @@ public class Utils
     
     public static void submitSolution (String minerID, int nonce)
     {
-        getPage ("http://65.26.252.225/quest/dia/krist/index.php?submitblock&address=" + minerID + "&nonce=" + nonce);
+        getPage (KRIST_SYNC_LINK + "submitblock&address=" + minerID + "&nonce=" + nonce);
     }
     
     public static String subSHA256 (String data, int endIndex)
