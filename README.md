@@ -18,12 +18,6 @@ As always, you're welcome to use this software as you please. Simply give credit
 # User Instructions
 Download the "Krist-Miner.jar" file from the /dist/ folder in the repository. In the same folder, create another folder called "lib." Place the "guava-18.0" jar file into this new folder. Execute the Krist_Miner jar file (double click it in Windows).Enter your generated Krist ID. Set the desired sleep time. 0 for maximum speed and greatest CPU usage (WATCH OUT!). ???PROFIT???
 
-# A special warning regarding the "Sleep time (ms)" field
-This is the amount of time each mining thread will wait between hashes in milliseconds. If you set this to zero, you will
-get the maximum speed possible. However, this will also crank up your CPU usage. Therefore, pick a sensible sleep timer if
-you want to use other programs alongside this one. However, picking something like a value of 5 may severely hinder your ability
-to mine blocks in competition with other miners. Be smart about this.
-
 # Bugs
 This is new software and one of the first programs I've written in Java using Threads and the like. So, there WILL BE BUGS.
 Currently the bugs are as follows:
