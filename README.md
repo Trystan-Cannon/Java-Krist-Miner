@@ -3,8 +3,8 @@ A krist currency miner written in Java.
 
 This software allows users to "mine" the cross-Minecraft-server currency, Krist.
 
-The program currently allows users to make use of more than core, if they have more cores available, that is. Currently, only
-2/3 of the total cores on one's machine may be used to prevent radically increased CPU usage.
+The program currently allows users to make use of more than core, if they have more cores available, that is. Currently, the
+default is 1 core.
 
 However, it is important to note that your CPU usage will grow greatly when using this program. Be careful. Monitor the
 usage and make use of less cores if your usage gets too high.
