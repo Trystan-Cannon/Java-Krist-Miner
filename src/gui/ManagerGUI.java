@@ -17,9 +17,12 @@ import krist.miner.ClusterMiner;
 import krist.miner.MiningListener;
 import krist.miner.Utils;
 
-public class ManagerGUI extends JFrame implements ActionListener, MiningListener
+public final class ManagerGUI extends JFrame implements ActionListener, MiningListener
 {
-    public static final int MAX_CORES = Math.max ((int) (Runtime.getRuntime().availableProcessors() / (3D/2D)), 1);
+    public static final int DEFAULT_MAX_CORE_LIMIT = 1;
+    public static final int MAX_CORE_LIMIT         = 6;
+    
+    private static int configuredCoreLimit = DEFAULT_MAX_CORE_LIMIT; /** The core limit read from the configuration file. */
     
     public static final int WINDOW_WIDTH  = 300;
     public static final int WINDOW_HEIGHT = 400;
@@ -43,7 +46,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
     
     public ArrayList<JCheckBox> coreUseCheckBoxes = null;
     
-    private ManagerGUI()
+    public ManagerGUI()
     {
         // Set up our window's basic characteristics.
         super ("Grim's Krist Miner");
@@ -52,6 +55,12 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         setDefaultCloseOperation (EXIT_ON_CLOSE);
         
         setLayout (new FlowLayout (FlowLayout.LEADING, 30, 10));
+        
+        /**
+         * Read the configuration file for the configured core limit, if there
+         * is one.
+         */
+        configuredCoreLimit = Utils.getConfiguredCoreLimit();
         
         minerID_fieldLabel = new JLabel ("Krist Address");
         minerID_textField  = new JTextField (21);
@@ -70,7 +79,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
             coreUseCheckBoxes.add (new JCheckBox ("Core " + (core + 1)));
             
             // Prevent the user from using all of their cores.
-            if (core >= MAX_CORES)
+            if (core >= configuredCoreLimit)
             {
                 coreUseCheckBoxes.get (core).setEnabled (false);
             }
@@ -117,11 +126,6 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         
         miners = new ArrayList();
     }
-    
-    public static void main (String[] args)
-    {
-        new ManagerGUI().setVisible (true);
-    }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent)
@@ -167,8 +171,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
                 stopMining();
                 outputTextArea.setText ("");
                 
-                // Update the balance field.
-                balanceTextField.setText ("Balance: " + Utils.getBalance (minerID_textField.getText()) + " KST");
+                updateBalanceField();
                 startMining();
             }
         }
@@ -191,6 +194,19 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
                 startMining();
             }
         }
+    }
+    
+    public void updateBalanceField()
+    {
+        balanceTextField.setText ("Retrieving balance...");
+        
+        String balance = null;
+        while (balance == null)
+        {
+            balance = Utils.getBalance (minerID_textField.getText());
+        }
+        
+        balanceTextField.setText ("Balance: " + balance + " KST");
     }
     
     public void addOutputLine (String line)
@@ -225,7 +241,7 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
             
             String block = Utils.getLastBlock();
             
-            for (int miner = 0; miner < MAX_CORES; miner++)
+            for (int miner = 0; miner < configuredCoreLimit; miner++)
             {
                 if (coreUseCheckBoxes.get (miner).isSelected())
                 {
@@ -242,6 +258,14 @@ public class ManagerGUI extends JFrame implements ActionListener, MiningListener
         {
             addOutputLine ("Mining stopped.");
             isMining = false;
+        }
+    }
+    
+    public static void setCoreLimit (int coreLimit)
+    {
+        if (coreLimit >= DEFAULT_MAX_CORE_LIMIT && coreLimit <= MAX_CORE_LIMIT)
+        {
+            configuredCoreLimit = coreLimit;
         }
     }
 }
