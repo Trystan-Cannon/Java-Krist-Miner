@@ -244,6 +244,10 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     {
         if (!isMining)
         {
+            // Update the balance field.
+            updateBalanceField();
+            System.out.println (Utils.getBalance (minerID_textField.getText()));
+            
             // Destroy the old miner threads.
             miners = new ArrayList();
 
