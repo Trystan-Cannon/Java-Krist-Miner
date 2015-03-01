@@ -18,7 +18,7 @@ As always, you're welcome to use this software as you please. Simply give credit
 # User Instructions
 Download the "Krist-Miner.jar" file from the /dist/ folder in the repository. In the same folder, create another folder called "lib." Place the "guava-18.0" jar file into this new folder.
 
-Windows: Execute the Krist_Miner jar file (double click it in Windows).Enter your generated Krist ID. Set the desired sleep time. 0 for maximum speed and greatest CPU usage (WATCH OUT!). ???PROFIT???
+Windows: Execute the Krist_Miner jar file (double click it in Windows). Enter your generated Krist ID. Click "Begin Mining" and you're on your way.
 
 Ubuntu (Linux): Open your terminal and navigate to the directory in which you placed the miner jar. Type: "java -jar Krist_Miner.jar" or whatever you named the jar. This will create the config.txt. If you have any issues, let me know; I don't use Linux.
 
