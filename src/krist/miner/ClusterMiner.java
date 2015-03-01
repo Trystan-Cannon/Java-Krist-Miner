@@ -7,6 +7,7 @@ public class ClusterMiner implements Runnable
     private ManagerGUI gui;
     private String     minerID;
     private int        nonce;
+    private int        speed;
     private String     block;
     private boolean    isComplete;
     private boolean    solvedBlock;
@@ -16,6 +17,7 @@ public class ClusterMiner implements Runnable
         this.gui     = gui;
         this.minerID = minerID;
         this.nonce   = nonce;
+        this.speed   = 0;
         this.block   = block;
     }
     
@@ -24,6 +26,9 @@ public class ClusterMiner implements Runnable
     {
         String newBlock = Utils.subSHA256 (minerID + block + nonce, 12);
         gui.addOutputLine ("Starting at " + block + " from " + nonce + "!");
+        
+        long startTime = System.nanoTime();
+        int  lastHash  = 0;
         
         for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo (block) >= 0; hashIteration++, nonce++)
         {
@@ -38,6 +43,14 @@ public class ClusterMiner implements Runnable
             if (!gui.isMining())
             {
                 return;
+            }
+            
+            // Calculate speed.
+            if (System.nanoTime() - startTime > 1E9)
+            {
+                speed     = hashIteration - lastHash;
+                lastHash  = hashIteration;
+                startTime = System.nanoTime();
             }
             
             newBlock = Utils.subSHA256 (minerID + block + nonce, 12);
@@ -74,5 +87,10 @@ public class ClusterMiner implements Runnable
     public int getNonce()
     {
         return nonce;
+    }
+    
+    public int getSpeed()
+    {
+        return speed;
     }
 }

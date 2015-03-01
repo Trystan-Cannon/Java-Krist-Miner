@@ -14,6 +14,7 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.text.DefaultCaret;
 import krist.miner.ClusterMiner;
+import krist.miner.MinerForeman;
 import krist.miner.MiningListener;
 import krist.miner.Utils;
 
@@ -25,9 +26,9 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     private static int configuredCoreLimit = DEFAULT_MAX_CORE_LIMIT; /** The core limit read from the configuration file. */
     
     public static final int WINDOW_WIDTH  = 300;
-    public static final int WINDOW_HEIGHT = 400;
+    public static final int WINDOW_HEIGHT = 450;
     
-    public static int nonceOffset = 1000000;
+    public static int nonceOffset = 30000000;
     
     private ArrayList<ClusterMiner> miners = null;
     private boolean isMining               = false;
@@ -37,6 +38,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public JTextField minerID_textField = null;
     
     public JTextField balanceTextField = null;
+    public JTextField speedTextField   = null; /** This is for only the first thread! It is multiplied by the number of threads to estimate the actual speed. */
     
     public JTextArea   outputTextArea   = null;
     public JScrollPane outputScrollPane = null;
@@ -66,6 +68,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         minerID_textField  = new JTextField (21);
         
         balanceTextField = new JTextField (21);
+        speedTextField   = new JTextField (21);
         
         outputTextArea   = new JTextArea (10, 20);
         outputScrollPane = new JScrollPane (outputTextArea);
@@ -96,6 +99,8 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         coreUseCheckBoxes.get (0).setEnabled (false);
         
         balanceTextField.setEditable (false);
+        speedTextField.setEditable (false);
+        speedTextField.setText ("Hashes/s: 0");
         
         outputTextArea.setEditable (false);
         // Make sure that the scroll pane moves as the output moves out of view. This looks like automatic scrolling.
@@ -114,6 +119,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         add (minerID_fieldLabel);
         add (minerID_textField);
         add (balanceTextField);
+        add (speedTextField);
         add (beginMiningButton);
         add (stopMiningButton);
         add (outputScrollPane);
@@ -196,6 +202,11 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         }
     }
     
+    public void updateSpeedField (int speed)
+    {
+        speedTextField.setText ("Hashes/s: " + speed);
+    }
+    
     public void updateBalanceField()
     {
         balanceTextField.setText ("Retrieving balance...");
@@ -249,6 +260,10 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
                     new Thread (miners.get (miner)).start();
                 }
             }
+            
+            // Create a thread to calculate the speed of the miner every second.
+            // NOTE: This could slow down mining.
+            new Thread (new MinerForeman (this, miners)).start();
         }
     }
     
