@@ -4,13 +4,14 @@ import gui.ManagerGUI;
 
 public class ClusterMiner implements Runnable
 {
-    private ManagerGUI gui;
-    private String     minerID;
-    private int        nonce;
-    private int        speed;
-    private String     block;
-    private boolean    isComplete;
-    private boolean    solvedBlock;
+    private final String     block;
+    private final ManagerGUI gui;
+    private final String     minerID;
+    
+    private int     nonce;
+    private int     speed;
+    private boolean isComplete;
+    private boolean solvedBlock;
     
     public ClusterMiner (ManagerGUI gui, String minerID, String block, int nonce)
     {
@@ -24,49 +25,54 @@ public class ClusterMiner implements Runnable
     @Override
     public void run()
     {
-        String newBlock = Utils.subSHA256 (minerID + block + nonce, 12);
-        gui.addOutputLine ("Starting at " + block + " from " + nonce + "!");
-        
-        long startTime = System.nanoTime();
-        int  lastHash  = 0;
-        
-        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo (block) >= 0; hashIteration++, nonce++)
+        synchronized (gui)
         {
-            /**
-             * This is shit design. @see<code>ManagerGUI.onMineCompletion</code>.
-             * 
-             * If this doesn't happen, then when the mining is force stopped, the
-             * miner will trigger its completion, making the ManagerGUI think that
-             * we just need to increase the range, leading the program to continue
-             * mining.
-             */
-            if (!gui.isMining())
+            String newBlock = Utils.subSHA256 (minerID + block + nonce, 12);
+            gui.addOutputLine ("Starting at " + block + " from " + nonce + "!");
+
+            long startTime = System.nanoTime();
+            int  lastHash  = 0;
+
+            for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo (block) >= 0; hashIteration++, nonce++)
             {
-                return;
+                /**
+                 * This is shit design. @see<code>ManagerGUI.onMineCompletion</code>.
+                 * 
+                 * If this doesn't happen, then when the mining is force stopped, the
+                 * miner will trigger its completion, making the ManagerGUI think that
+                 * we just need to increase the range, leading the program to continue
+                 * mining.
+                 */
+                if (!gui.isMining())
+                {
+                    return;
+                }
+
+                // Calculate speed.
+                if (System.nanoTime() - startTime > 1E9)
+                {
+                    speed     = hashIteration - lastHash;
+                    lastHash  = hashIteration;
+                    startTime = System.nanoTime();
+
+                    gui.updateSpeedField (this);
+                }
+
+                newBlock = Utils.subSHA256 (minerID + block + nonce, 12);
             }
-            
-            // Calculate speed.
-            if (System.nanoTime() - startTime > 1E9)
+
+            if (newBlock.compareTo (block) < 0)
             {
-                speed     = hashIteration - lastHash;
-                lastHash  = hashIteration;
-                startTime = System.nanoTime();
+                gui.addOutputLine ("Solution found at nonce = " + (nonce - 1));
+                Utils.submitSolution (minerID, nonce - 1);
+                solvedBlock = true;
+
+                gui.stopMining();
             }
-            
-            newBlock = Utils.subSHA256 (minerID + block + nonce, 12);
+
+            gui.onMineCompletion (this);
+            isComplete = true;
         }
-        
-        if (newBlock.compareTo (block) < 0)
-        {
-            gui.addOutputLine ("Solution found at nonce = " + (nonce - 1));
-            Utils.submitSolution (minerID, nonce - 1);
-            solvedBlock = true;
-            
-            gui.stopMining();
-        }
-        
-        gui.onMineCompletion (this);
-        isComplete = true;
     }
     
     public boolean isComplete()

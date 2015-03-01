@@ -14,7 +14,6 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.text.DefaultCaret;
 import krist.miner.ClusterMiner;
-import krist.miner.MinerForeman;
 import krist.miner.MiningListener;
 import krist.miner.Utils;
 
@@ -47,6 +46,10 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public JButton stopMiningButton  = null;
     
     public ArrayList<JCheckBox> coreUseCheckBoxes = null;
+    
+    private long lastUpdateTime = 0;
+    private int  minersUpdated  = 0;
+    private int  speed          = 0;
     
     public ManagerGUI()
     {
@@ -202,9 +205,27 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         }
     }
     
-    public void updateSpeedField (int speed)
+    public void updateSpeedField (ClusterMiner miner)
     {
-        speedTextField.setText ("Hashes/s: " + speed);
+        synchronized (this)
+        {
+            long currentTime = System.nanoTime();
+
+            // If a second has elapsed since the last updated, let's reset and wait
+            // for all miners to update their speeds.
+            if (currentTime - lastUpdateTime > 2E9)
+            {
+                speedTextField.setText ("Hashes/s: " + speed/2);
+                
+                minersUpdated  = 0;
+                lastUpdateTime = currentTime;
+                speed          = 0;
+            }
+            else if (minersUpdated < miners.size())
+            {
+                speed += miner.getSpeed();
+            }
+        }
     }
     
     public void updateBalanceField()
@@ -246,7 +267,6 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         {
             // Update the balance field.
             updateBalanceField();
-            System.out.println (Utils.getBalance (minerID_textField.getText()));
             
             // Destroy the old miner threads.
             miners = new ArrayList();
@@ -264,10 +284,6 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
                     new Thread (miners.get (miner)).start();
                 }
             }
-            
-            // Create a thread to calculate the speed of the miner every second.
-            // NOTE: This could slow down mining.
-            new Thread (new MinerForeman (this, miners)).start();
         }
     }
     

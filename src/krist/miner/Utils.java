@@ -20,7 +20,7 @@ import java.util.ArrayList;
 public class Utils
 {
     /**
-     * Miner configuration file formnat:
+     * Miner configuration file format:
      *  Lines that start with '#' are comments.
      *  Following this, we're looking for the field: coreLimit=...
      * 
