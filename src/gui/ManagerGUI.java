@@ -27,7 +27,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public static final int WINDOW_WIDTH  = 300;
     public static final int WINDOW_HEIGHT = 450;
     
-    public static int nonceOffset = 30000000;
+    public static int nonceOffset = 10000000;
     
     private ArrayList<ClusterMiner> miners = null;
     private boolean isMining               = false;
@@ -182,6 +182,8 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
                 
                 updateBalanceField();
                 startMining();
+                
+                return;
             }
         }
         
@@ -213,9 +215,12 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
 
             // If a second has elapsed since the last updated, let's reset and wait
             // for all miners to update their speeds.
-            if (currentTime - lastUpdateTime > 2E9)
+            if (currentTime - lastUpdateTime > 1E9)
             {
-                speedTextField.setText ("Hashes/s: " + speed/2);
+                if (speed > 0)
+                {
+                    speedTextField.setText ("Hashes/s: " + speed);
+                }
                 
                 minersUpdated  = 0;
                 lastUpdateTime = currentTime;
