@@ -115,7 +115,7 @@ public class Utils
                 
                 writer.write ("# This is the maximum allowed number of cores that the miner can utilize.");
                 writer.newLine();
-                writer.write ("# The default value is 1. The maxmimum is 6. If you choose to use more than");
+                writer.write ("# The default value is 1. The maxmimum is 8. If you choose to use more than");
                 writer.newLine();
                 writer.write ("# the recommended number of cores, your computer stands the risk of a thermal\n");
                 writer.newLine();

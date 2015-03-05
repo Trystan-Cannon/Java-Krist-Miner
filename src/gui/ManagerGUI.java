@@ -14,23 +14,24 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.text.DefaultCaret;
 import krist.miner.ClusterMiner;
+import krist.miner.Foreman;
 import krist.miner.MiningListener;
 import krist.miner.Utils;
 
 public final class ManagerGUI extends JFrame implements ActionListener, MiningListener
 {
     public static final int DEFAULT_MAX_CORE_LIMIT = 1;
-    public static final int MAX_CORE_LIMIT         = 6;
+    public static final int MAX_CORE_LIMIT         = 8;
     
     private static int configuredCoreLimit = DEFAULT_MAX_CORE_LIMIT; /** The core limit read from the configuration file. */
     
     public static final int WINDOW_WIDTH  = 300;
-    public static final int WINDOW_HEIGHT = 450;
+    public static final int WINDOW_HEIGHT = 480;
     
     public static int nonceOffset = 10000000;
     
     private ArrayList<ClusterMiner> miners = null;
-    private boolean isMining               = false;
+    private volatile boolean isMining      = false;
     private int     finishedMiners         = 0;
     
     public JLabel minerID_fieldLabel    = null;
@@ -46,10 +47,6 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public JButton stopMiningButton  = null;
     
     public ArrayList<JCheckBox> coreUseCheckBoxes = null;
-    
-    private long lastUpdateTime = 0;
-    private int  minersUpdated  = 0;
-    private int  speed          = 0;
     
     public ManagerGUI()
     {
@@ -80,7 +77,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         
         // This creates 6 core options. This is for the sake of the display
         // being uninterrupted; some machines will have more or less cores.
-        for (int core = 0; core < 6; core++)
+        for (int core = 0; core < 8; core++)
         {
             coreUseCheckBoxes.add (new JCheckBox ("Core " + (core + 1)));
             
@@ -135,6 +132,24 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         
         miners = new ArrayList();
     }
+    
+    /**
+     * Causes the miner to wait until all miner threads are ready to being
+     * mining.
+     * @param you 
+     */
+    public synchronized void signifyMinerReady (ClusterMiner you)
+    {
+        try
+        {
+            this.wait();
+        }
+        catch (InterruptedException waitFaliure)
+        {
+            System.out.println ("ManagerGUI failed to wait for miner start. Stopping mining.");
+            stopMining();
+        }
+    }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent)
@@ -170,19 +185,20 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     {
         finishedMiners++;
         
+        
         // Check if any of the miners have solved the block.
         for (ClusterMiner miner : miners)
         {
-            if (miner.solvedBlock())
+            if (miner.hasSolvedBlock())
             {
                 // Move on to the next cluster if we've solved the problem.
                 // Clear the text area, too.
                 stopMining();
                 outputTextArea.setText ("");
+                addOutputLine ("Solved block " + miner.getBlock());
                 
                 updateBalanceField();
                 startMining();
-                
                 return;
             }
         }
@@ -195,40 +211,15 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             
             if (miners.get (0).getCurrentBlock().equals (Utils.getLastBlock()))
             {
-                addOutputLine ("Could not find solution. Starting at new offset.");
+                addOutputLine ("\nCould not find solution. Starting at new offset.");
                 startMining (miners.get (miners.size() - 1).getNonce());
             }
             
             else
             {
+                outputTextArea.setText ("");
                 addOutputLine ("Block changed. Moving on to next block.");
                 startMining();
-            }
-        }
-    }
-    
-    public void updateSpeedField (ClusterMiner miner)
-    {
-        synchronized (this)
-        {
-            long currentTime = System.nanoTime();
-
-            // If a second has elapsed since the last updated, let's reset and wait
-            // for all miners to update their speeds.
-            if (currentTime - lastUpdateTime > 1E9)
-            {
-                if (speed > 0)
-                {
-                    speedTextField.setText ("Hashes/s: " + speed);
-                }
-                
-                minersUpdated  = 0;
-                lastUpdateTime = currentTime;
-                speed          = 0;
-            }
-            else if (minersUpdated < miners.size())
-            {
-                speed += miner.getSpeed();
             }
         }
     }
@@ -288,6 +279,23 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
                     miners.add (new ClusterMiner (this, minerID_textField.getText(), block, startingNonce + nonceOffset * miner));
                     new Thread (miners.get (miner)).start();
                 }
+            }
+            
+            new Thread (new Foreman (this, miners)).start();
+            
+            try
+            {
+                Thread.sleep (100);
+            }
+            catch (InterruptedException sleepFailure)
+            {
+                System.out.println ("Manager failed to sleep. Stopping.");
+                stopMining();
+            }
+            
+            synchronized (this)
+            {
+                this.notifyAll();
             }
         }
     }
