@@ -23,7 +23,7 @@ Windows: Execute the Krist_Miner jar file (double click it in Windows). Enter yo
 Ubuntu (Linux): Open your terminal and navigate to the directory in which you placed the miner jar. Type: "java -jar Krist_Miner.jar" or whatever you named the jar. This will create the config.txt. If you have any issues, let me know; I don't use Linux.
 
 # Setting the core limit
-When you start the program, it reads from a file to see if you've set your own core limit. The program supports up to 6 and no less than 1.
+When you start the program, it reads from a file to see if you've set your own core limit. The program supports up to 8 and no less than 1. If you use more cores than your machine has, it will spawn that many threads, slowing things down.
 The config file is located in the same directory as the miner jar. It is named "config.txt." To change the core limit, open this file and change the field 'coreLimit' from 1 to whatever number you want, after reading the comments, of course.
 
 # Bugs
