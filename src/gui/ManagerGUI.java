@@ -28,7 +28,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public static final int WINDOW_WIDTH  = 300;
     public static final int WINDOW_HEIGHT = 480;
     
-    public static int nonceOffset = 10000000;
+    public static long nonceOffset = 10000000;
     
     private ArrayList<ClusterMiner> miners = null;
     private volatile boolean isMining      = false;
