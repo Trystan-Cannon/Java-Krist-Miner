@@ -8,9 +8,9 @@ public class Foreman implements Runnable
     private final ManagerGUI gui;
     private final ArrayList<ClusterMiner> miners;
     
-    public Foreman (ManagerGUI gui, ArrayList<ClusterMiner> miners)
+    public Foreman(ManagerGUI gui, ArrayList<ClusterMiner> miners)
     {
-        this.gui    = gui;
+        this.gui = gui;
         this.miners = miners;
     }
     
@@ -23,12 +23,12 @@ public class Foreman implements Runnable
             {
                 synchronized (this)
                 {
-                    wait (1000);
+                    wait(1000);
                 }
             }
             catch (InterruptedException sleepFailure)
             {
-                System.out.println ("Foreman failed to sleep.");
+                System.out.println("Foreman failed to sleep.");
             }
             
             int speed = 0;
@@ -37,9 +37,9 @@ public class Foreman implements Runnable
                 speed += miner.getSpeed();
             }
             
-            gui.speedTextField.setText ("" + speed);
+            gui.speedTextField.setText("" + speed);
         }
         
-        gui.speedTextField.setText ("0");
+        gui.speedTextField.setText("0");
     }
 }

@@ -15,33 +15,34 @@ public class ClusterMiner implements Runnable
     private boolean isComplete;
     private boolean solvedBlock;
     
-    public ClusterMiner (ManagerGUI gui, JTextField outputField, String minerID, String block, long nonce)
+    public ClusterMiner(ManagerGUI gui, JTextField outputField, String minerID, String block, long nonce)
     {
-        this.gui         = gui;
+        this.gui = gui;
         this.outputField = outputField;
         
         this.minerID = minerID;
-        this.nonce   = nonce;
-        this.speed   = 0;
-        this.block   = block;
+        this.nonce = nonce;
+        this.speed = 0;
+        this.block = block;
     }
     
     @Override
     public void run()
     {
         // Informat the manager that we're ready to begin mining.
-        gui.signifyMinerReady (this);
+        gui.signifyMinerReady(this);
         
         String newBlock = Utils.subSHA256(minerID + block + nonce, 12);
-        outputField.setText ("@" + nonce);
-
+        outputField.setText("@" + nonce);
+        
         long startTime = System.nanoTime();
-        int lastHash   = 0;
-
+        int lastHash = 0;
+        
         for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo(block) >= 0; hashIteration++, nonce++)
         {
             /**
              * This is shit design.
+             * 
              * @see<code>ManagerGUI.onMineCompletion</code>.
              *
              * If this doesn't happen, then when the mining is force stopped,
@@ -51,32 +52,32 @@ public class ClusterMiner implements Runnable
              */
             if (!gui.isMining())
             {
-                outputField.setText ("Not in use.");
+                outputField.setText("Not in use.");
                 return;
             }
-
+            
             // Calculate speed.
             if (System.nanoTime() - startTime > 1E9)
             {
-                speed     = hashIteration - lastHash;
-                lastHash  = hashIteration;
+                speed = hashIteration - lastHash;
+                lastHash = hashIteration;
                 startTime = System.nanoTime();
             }
-
+            
             newBlock = Utils.subSHA256(minerID + block + nonce, 12);
         }
-
+        
         if (newBlock.compareTo(block) < 0)
         {
-            outputField.setText ("Sln @ " + (nonce - 1));
+            outputField.setText("Sln @ " + (nonce - 1));
             Utils.submitSolution(minerID, nonce - 1);
             solvedBlock = true;
-
+            
             gui.stopMining();
         }
-
+        
         gui.onMineCompletion(this);
-        outputField.setText ("Not in use.");
+        outputField.setText("Not in use.");
         isComplete = true;
     }
     

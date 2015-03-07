@@ -23,45 +23,50 @@ import krist.miner.Utils;
 public final class ManagerGUI extends JFrame implements ActionListener, MiningListener
 {
     public static final int DEFAULT_MAX_CORE_LIMIT = 1;
-    public static final int MAX_CORE_LIMIT         = 8;
+    public static final int MAX_CORE_LIMIT = 8;
     
-    private static int configuredCoreLimit = DEFAULT_MAX_CORE_LIMIT; /** The core limit read from the configuration file. */
+    private static int configuredCoreLimit = DEFAULT_MAX_CORE_LIMIT;
+    /** The core limit read from the configuration file. */
     
-    private static final int FIELD_WIDTH             = 21;
+    private static final int FIELD_WIDTH = 21;
     private static final int CORE_OUTPUT_FIELD_WIDTH = 11;
     
-    public static final int WINDOW_WIDTH  = 300;
+    public static final int WINDOW_WIDTH = 300;
     public static final int WINDOW_HEIGHT = 600;
     
     public static final long nonceOffset = 10000000;
     
     private ArrayList<ClusterMiner> miners = null;
-    private volatile boolean isMining      = false;
-    private int     finishedMiners         = 0;
+    private volatile boolean isMining = false;
+    private int finishedMiners = 0;
     
-    public JLabel minerID_fieldLabel    = null;
+    public JLabel minerID_fieldLabel = null;
     public JTextField minerID_textField = null;
     
-    public JTextField blockTextField   = null;
+    public JTextField blockTextField = null;
     public JTextField balanceTextField = null;
-    public JTextField speedTextField   = null; /** This is for only the first thread! It is multiplied by the number of threads to estimate the actual speed. */
+    public JTextField speedTextField = null;
+    /**
+     * This is for only the first thread! It is multiplied by the number of
+     * threads to estimate the actual speed.
+     */
     
     private final ArrayList<JTextField> clusterMinerOutputFields;
     
     public JButton beginMiningButton = null;
-    public JButton stopMiningButton  = null;
+    public JButton stopMiningButton = null;
     
     public ArrayList<JCheckBox> coreUseCheckBoxes = null;
     
     public ManagerGUI()
     {
         // Set up our window's basic characteristics.
-        super ("Grim's Krist Miner");
-        setSize (WINDOW_WIDTH, WINDOW_HEIGHT);
-        setResizable (false);
-        setDefaultCloseOperation (EXIT_ON_CLOSE);
+        super("Grim's Krist Miner");
+        setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+        setResizable(false);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         
-        setLayout (new FlowLayout (FlowLayout.LEADING, 30, 3));
+        setLayout(new FlowLayout(FlowLayout.LEADING, 30, 3));
         
         /**
          * Read the configuration file for the configured core limit, if there
@@ -72,87 +77,88 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         /**
          * Initialize all of the panel components that we'll be using.
          */
-        minerID_fieldLabel = new JLabel ("Krist Address");
-        minerID_textField  = new JTextField (FIELD_WIDTH);
+        minerID_fieldLabel = new JLabel("Krist Address");
+        minerID_textField = new JTextField(FIELD_WIDTH);
         
-        balanceTextField = new JTextField (FIELD_WIDTH);
-        speedTextField   = new JTextField (FIELD_WIDTH);
-        blockTextField   = new JTextField (FIELD_WIDTH);
+        balanceTextField = new JTextField(FIELD_WIDTH);
+        speedTextField = new JTextField(FIELD_WIDTH);
+        blockTextField = new JTextField(FIELD_WIDTH);
         
         clusterMinerOutputFields = new ArrayList();
-        coreUseCheckBoxes        = new ArrayList();
+        coreUseCheckBoxes = new ArrayList();
         
         /*
-            Spawn as many output text fields as there are possible miner threads.
-            
-            However, if the field won't be used because it exceeds the configured
-            limit, then we'll just fill it with an 'N\A.'
-        */
+         * Spawn as many output text fields as there are possible miner threads.
+         * 
+         * However, if the field won't be used because it exceeds the configured
+         * limit, then we'll just fill it with an 'N\A.'
+         */
         for (int outputFieldIndex = 0; outputFieldIndex < MAX_CORE_LIMIT; outputFieldIndex++)
         {
-            JTextField minerOutputField = new JTextField (CORE_OUTPUT_FIELD_WIDTH);
-            minerOutputField.setBorder (BorderFactory.createTitledBorder (BorderFactory.createLoweredSoftBevelBorder(), "Core " + (outputFieldIndex + 1) + " Nonce"));
-            minerOutputField.setEditable (false);
-            minerOutputField.setText (outputFieldIndex < configuredCoreLimit ? "Not in use." : "Not available.");
+            JTextField minerOutputField = new JTextField(CORE_OUTPUT_FIELD_WIDTH);
+            minerOutputField.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLoweredSoftBevelBorder(), "Core " + (outputFieldIndex + 1)
+                    + " Nonce"));
+            minerOutputField.setEditable(false);
+            minerOutputField.setText(outputFieldIndex < configuredCoreLimit ? "Not in use." : "Not available.");
             
-            clusterMinerOutputFields.add (minerOutputField);
+            clusterMinerOutputFields.add(minerOutputField);
         }
         
         // This creates 6 core options. This is for the sake of the display
         // being uninterrupted; some machines will have more or less cores.
         for (int core = 0; core < MAX_CORE_LIMIT; core++)
         {
-            JCheckBox coreCheckBox = new JCheckBox ("Core " + (core + 1));
+            JCheckBox coreCheckBox = new JCheckBox("Core " + (core + 1));
             
-            coreUseCheckBoxes.add (coreCheckBox);
+            coreUseCheckBoxes.add(coreCheckBox);
             
             // Prevent the user from using all of their cores.
             if (core >= configuredCoreLimit)
             {
-                coreUseCheckBoxes.get (core).setEnabled (false);
+                coreUseCheckBoxes.get(core).setEnabled(false);
             }
             // Make sure we can see if they're checked.
             else
             {
-                coreUseCheckBoxes.get (core).addActionListener (this);
-                coreUseCheckBoxes.get (core).setActionCommand ("core.use." + core);
+                coreUseCheckBoxes.get(core).addActionListener(this);
+                coreUseCheckBoxes.get(core).setActionCommand("core.use." + core);
             }
         }
         
         // Set the first core to always be checked.
-        coreUseCheckBoxes.get (0).setSelected (true);
-        coreUseCheckBoxes.get (0).setEnabled (false);
+        coreUseCheckBoxes.get(0).setSelected(true);
+        coreUseCheckBoxes.get(0).setEnabled(false);
         
-        balanceTextField.setEditable (false);
-        balanceTextField.setBorder (BorderFactory.createTitledBorder ("Balance"));
-        speedTextField.setEditable (false);
-        speedTextField.setBorder (BorderFactory.createTitledBorder ("Speed (Hashes/s)"));
-        speedTextField.setText ("0");
-        blockTextField.setEditable (false);
-        blockTextField.setBorder (BorderFactory.createTitledBorder ("Block"));
+        balanceTextField.setEditable(false);
+        balanceTextField.setBorder(BorderFactory.createTitledBorder("Balance"));
+        speedTextField.setEditable(false);
+        speedTextField.setBorder(BorderFactory.createTitledBorder("Speed (Hashes/s)"));
+        speedTextField.setText("0");
+        blockTextField.setEditable(false);
+        blockTextField.setBorder(BorderFactory.createTitledBorder("Block"));
         
-        beginMiningButton = new JButton ("Begin Mining");
-        stopMiningButton  = new JButton ("Stop Mining");
+        beginMiningButton = new JButton("Begin Mining");
+        stopMiningButton = new JButton("Stop Mining");
         
-        beginMiningButton.setActionCommand ("mining.start");
-        stopMiningButton.setActionCommand ("mining.stop");
-        beginMiningButton.addActionListener (this);
-        stopMiningButton.addActionListener (this);
+        beginMiningButton.setActionCommand("mining.start");
+        stopMiningButton.setActionCommand("mining.stop");
+        beginMiningButton.addActionListener(this);
+        stopMiningButton.addActionListener(this);
         
-        add (minerID_fieldLabel);
-        add (minerID_textField);
-        add (balanceTextField);
-        add (speedTextField);
-        add (blockTextField);
-        add (beginMiningButton);
-        add (stopMiningButton);
+        add(minerID_fieldLabel);
+        add(minerID_textField);
+        add(balanceTextField);
+        add(speedTextField);
+        add(blockTextField);
+        add(beginMiningButton);
+        add(stopMiningButton);
         
         // Add the output fields for all possible threads along with their
         // usage check boxes.
         for (int minerIndex = 0; minerIndex < MAX_CORE_LIMIT; minerIndex++)
         {
-            add (clusterMinerOutputFields.get (minerIndex));
-            add (coreUseCheckBoxes.get (minerIndex));
+            add(clusterMinerOutputFields.get(minerIndex));
+            add(coreUseCheckBoxes.get(minerIndex));
         }
         
         miners = new ArrayList();
@@ -161,9 +167,10 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     /**
      * Causes the miner to wait until all miner threads are ready to being
      * mining.
-     * @param you 
+     * 
+     * @param you
      */
-    public synchronized void signifyMinerReady (ClusterMiner you)
+    public synchronized void signifyMinerReady(ClusterMiner you)
     {
         try
         {
@@ -171,22 +178,22 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         }
         catch (InterruptedException waitFaliure)
         {
-            System.out.println ("ManagerGUI failed to wait for miner start. Stopping mining.");
+            System.out.println("ManagerGUI failed to wait for miner start. Stopping mining.");
             stopMining();
         }
     }
-
+    
     @Override
     public void actionPerformed(ActionEvent actionEvent)
     {
         String componentName = actionEvent.getActionCommand();
         
-        if (componentName.equals ("mining.start"))
+        if (componentName.equals("mining.start"))
         {
             // Not a valid miner ID: The field is empty.
-            if (!Utils.isMinerValid (minerID_textField.getText()))
+            if (!Utils.isMinerValid(minerID_textField.getText()))
             {
-                minerID_textField.setText ("Invalid ID or timeout.");
+                minerID_textField.setText("Invalid ID or timeout.");
             }
             // Begin mining. Make sure we're not already mining, though.
             else if (!isMining)
@@ -194,7 +201,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
                 startMining();
             }
         }
-        else if (componentName.equals ("mining.stop"))
+        else if (componentName.equals("mining.stop"))
         {
             stopMining();
         }
@@ -219,15 +226,16 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             }
         }
         
-        // If no one has solved it yet, let's try again at a different starting point.
+        // If no one has solved it yet, let's try again at a different starting
+        // point.
         // Also, make sure that we're still on the same block.
         if (miners.size() == finishedMiners && miners.size() > 0)
         {
             isMining = false;
             
-            if (miners.get (0).getCurrentBlock().equals (Utils.getLastBlock()))
+            if (miners.get(0).getCurrentBlock().equals(Utils.getLastBlock()))
             {
-                startMining (miners.get (miners.size() - 1).getNonce());
+                startMining(miners.get(miners.size() - 1).getNonce());
             }
             else
             {
@@ -238,15 +246,15 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     
     public void updateBalanceField()
     {
-        balanceTextField.setText ("Retrieving balance...");
+        balanceTextField.setText("Retrieving balance...");
         
         String balance = null;
         while (balance == null)
         {
-            balance = Utils.getBalance (minerID_textField.getText());
+            balance = Utils.getBalance(minerID_textField.getText());
         }
         
-        balanceTextField.setText (balance + " KST");
+        balanceTextField.setText(balance + " KST");
     }
     
     public String getMinerID()
@@ -261,10 +269,10 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     
     public void startMining()
     {
-        startMining (0);
+        startMining(0);
     }
     
-    public void startMining (long startingNonce)
+    public void startMining(long startingNonce)
     {
         if (!isMining)
         {
@@ -273,31 +281,32 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             
             // Destroy the old miner threads.
             miners = new ArrayList();
-
-            isMining       = true;
+            
+            isMining = true;
             finishedMiners = 0;
             
             String block = Utils.getLastBlock();
-            blockTextField.setText (block);
+            blockTextField.setText(block);
             
             for (int miner = 0; miner < configuredCoreLimit; miner++)
             {
-                if (coreUseCheckBoxes.get (miner).isSelected())
+                if (coreUseCheckBoxes.get(miner).isSelected())
                 {
-                    miners.add (new ClusterMiner (this, clusterMinerOutputFields.get (miner), minerID_textField.getText(), block, startingNonce + nonceOffset * miner));
-                    new Thread (miners.get (miner)).start();
+                    miners.add(new ClusterMiner(this, clusterMinerOutputFields.get(miner), minerID_textField.getText(), block, startingNonce + nonceOffset
+                            * miner));
+                    new Thread(miners.get(miner)).start();
                 }
             }
             
-            new Thread (new Foreman (this, miners)).start();
+            new Thread(new Foreman(this, miners)).start();
             
             try
             {
-                Thread.sleep (100);
+                Thread.sleep(100);
             }
             catch (InterruptedException sleepFailure)
             {
-                System.out.println ("Manager failed to sleep. Stopping.");
+                System.out.println("Manager failed to sleep. Stopping.");
                 stopMining();
             }
             
@@ -312,12 +321,12 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     {
         if (isMining)
         {
-            blockTextField.setText ("");
+            blockTextField.setText("");
             isMining = false;
         }
     }
     
-    public static void setCoreLimit (int coreLimit)
+    public static void setCoreLimit(int coreLimit)
     {
         if (coreLimit >= DEFAULT_MAX_CORE_LIMIT && coreLimit <= MAX_CORE_LIMIT)
         {
