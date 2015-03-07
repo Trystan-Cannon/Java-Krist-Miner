@@ -1,9 +1,6 @@
 package krist.miner;
 
-import gui.InitializationGUI;
 import gui.ManagerGUI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ClusterMiner implements Runnable
 {
@@ -11,12 +8,12 @@ public class ClusterMiner implements Runnable
     private final ManagerGUI gui;
     private final String     minerID;
     
-    private int     nonce;
+    private long    nonce;
     private int     speed;
     private boolean isComplete;
     private boolean solvedBlock;
     
-    public ClusterMiner (ManagerGUI gui, String minerID, String block, int nonce)
+    public ClusterMiner (ManagerGUI gui, String minerID, String block, long nonce)
     {
         this.gui     = gui;
         this.minerID = minerID;
@@ -98,7 +95,7 @@ public class ClusterMiner implements Runnable
         return block;
     }
     
-    public int getNonce()
+    public long getNonce()
     {
         return nonce;
     }

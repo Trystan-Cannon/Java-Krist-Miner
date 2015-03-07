@@ -1,7 +1,0 @@
-# This is the maximum allowed number of cores that the miner can utilize.
-# The default value is 1. The maxmimum is 6. If you choose to use more than
-# the recommended number of cores, your computer stands the risk of a thermal
-
-# shutdown or, more  dangerously, damage by overheating. You have been warned.
-# I, Trystan Cannon, bare no responsibility for your actions.
-coreLimit=1

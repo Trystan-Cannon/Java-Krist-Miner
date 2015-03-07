@@ -50,7 +50,7 @@ public class Utils
         return balanceData == null ? null : balanceData.get (0);
     }
     
-    public static void submitSolution (String minerID, int nonce)
+    public static void submitSolution (String minerID, long nonce)
     {
         getPage (KRIST_SYNC_LINK + "submitblock&address=" + minerID + "&nonce=" + nonce);
     }

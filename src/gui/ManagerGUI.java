@@ -28,7 +28,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public static final int WINDOW_WIDTH  = 300;
     public static final int WINDOW_HEIGHT = 480;
     
-    public static int nonceOffset = 10000000;
+    public static final long nonceOffset = 10000000;
     
     private ArrayList<ClusterMiner> miners = null;
     private volatile boolean isMining      = false;
@@ -185,7 +185,6 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     {
         finishedMiners++;
         
-        
         // Check if any of the miners have solved the block.
         for (ClusterMiner miner : miners)
         {
@@ -239,6 +238,11 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     
     public void addOutputLine (String line)
     {
+        if (outputTextArea.getLineCount() >= 9)
+        {
+            outputTextArea.setText ("");
+        }
+        
         outputTextArea.setText (outputTextArea.getText() + line + "\n");
     }
     
@@ -257,7 +261,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         startMining (0);
     }
     
-    public void startMining (int startingNonce)
+    public void startMining (long startingNonce)
     {
         if (!isMining)
         {
