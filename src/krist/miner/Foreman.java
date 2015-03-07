@@ -9,6 +9,7 @@ public class Foreman implements Runnable
     private final ArrayList<ClusterMiner> miners;
     
     private int secondsElapsed;
+    private volatile boolean isMining;
     
     public Foreman (ManagerGUI gui, ArrayList<ClusterMiner> miners)
     {
@@ -16,12 +17,13 @@ public class Foreman implements Runnable
         this.miners = miners;
         
         this.secondsElapsed = 0;
+        this.isMining       = true;
     }
     
     @Override
     public void run()
     {
-        while (gui.isMining())
+        while (isMining)
         {
             try
             {
@@ -36,8 +38,6 @@ public class Foreman implements Runnable
             }
             secondsElapsed++;
             
-            System.out.println (secondsElapsed);
-            
             long speed = 0;
             for (ClusterMiner miner : miners)
             {
@@ -48,5 +48,11 @@ public class Foreman implements Runnable
         }
         
         gui.updateSpeedField (0);
+    }
+    
+    public synchronized void stopMining()
+    {
+        System.out.println ("Foreman " + this + " stopped.");
+        isMining = false;
     }
 }

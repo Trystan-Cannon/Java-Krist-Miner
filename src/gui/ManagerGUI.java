@@ -31,6 +31,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public static final long nonceOffset = 10000000;
     
     private ArrayList<ClusterMiner> miners = null;
+    private Foreman foreman                = null;
     private boolean isMining               = false;
     private int     finishedMiners         = 0;
     
@@ -207,7 +208,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         // Also, make sure that we're still on the same block.
         if (miners.size() == finishedMiners && miners.size() > 0)
         {
-            isMining = false;
+            stopMining();
             
             if (miners.get (0).getCurrentBlock().equals (Utils.getLastBlock()))
             {
@@ -283,7 +284,8 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
                 }
             }
             
-            new Thread (new Foreman (this, miners)).start();
+            foreman = new Foreman (this, miners);
+            new Thread (foreman).start();
             
             try
             {
@@ -308,6 +310,9 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         {
             blockTextField.setText ("");
             isMining = false;
+            
+            // Stop the foreman explicitly.
+            foreman.stopMining();
         }
     }
     
