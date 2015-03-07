@@ -7,7 +7,6 @@ public class ClusterMiner implements Runnable
 {
     private final String     block;
     private final ManagerGUI gui;
-    private final JTextField outputField;
     private final String     minerID;
     
     private long    nonce;
@@ -15,11 +14,9 @@ public class ClusterMiner implements Runnable
     private boolean isComplete;
     private boolean solvedBlock;
     
-    public ClusterMiner (ManagerGUI gui, JTextField outputField, String minerID, String block, long nonce)
+    public ClusterMiner (ManagerGUI gui, String minerID, String block, long nonce)
     {
-        this.gui         = gui;
-        this.outputField = outputField;
-        
+        this.gui     = gui;
         this.minerID = minerID;
         this.nonce   = nonce;
         this.speed   = 0;
@@ -33,7 +30,6 @@ public class ClusterMiner implements Runnable
         gui.signifyMinerReady (this);
         
         String newBlock = Utils.subSHA256(minerID + block + nonce, 12);
-        outputField.setText ("@" + nonce);
 
         long startTime = System.nanoTime();
         int lastHash   = 0;
@@ -51,7 +47,6 @@ public class ClusterMiner implements Runnable
              */
             if (!gui.isMining())
             {
-                outputField.setText ("Not in use.");
                 return;
             }
 
@@ -68,7 +63,6 @@ public class ClusterMiner implements Runnable
 
         if (newBlock.compareTo(block) < 0)
         {
-            outputField.setText ("Sln @ " + (nonce - 1));
             Utils.submitSolution(minerID, nonce - 1);
             solvedBlock = true;
 
@@ -76,7 +70,6 @@ public class ClusterMiner implements Runnable
         }
 
         gui.onMineCompletion(this);
-        outputField.setText ("Not in use.");
         isComplete = true;
     }
     
