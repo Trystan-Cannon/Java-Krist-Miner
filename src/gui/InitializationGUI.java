@@ -44,13 +44,12 @@ public class InitializationGUI extends JFrame
         loadingScreen.setVisible (true);
         
         ManagerGUI.setCoreLimit (Utils.getConfiguredCoreLimit());
-        loadingScreen.setVisible (false); // The loading screen should go up for garbage collection.
+        loadingScreen.dispose();
         
         // Create the actual program GUI.
         final ManagerGUI gui = new ManagerGUI();
         
         gui.setLocation (screenDimensions.width/2 - gui.getSize().width/2, screenDimensions.height/2 - gui.getSize().height/2);
         gui.setVisible (true);
-        gui.updateBalanceField();
     }
 }

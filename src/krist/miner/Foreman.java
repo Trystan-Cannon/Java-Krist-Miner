@@ -37,9 +37,9 @@ public class Foreman implements Runnable
                 speed += miner.getSpeed();
             }
             
-            gui.speedTextField.setText ("Hashes/s: " + speed);
+            gui.speedTextField.setText ("" + speed);
         }
         
-        gui.speedTextField.setText ("Hashes/s: 0");
+        gui.speedTextField.setText ("0");
     }
 }

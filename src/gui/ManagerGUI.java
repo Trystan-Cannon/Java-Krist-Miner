@@ -1,18 +1,20 @@
 package gui;
 
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.text.DefaultCaret;
 import krist.miner.ClusterMiner;
 import krist.miner.Foreman;
 import krist.miner.MiningListener;
@@ -25,8 +27,11 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     
     private static int configuredCoreLimit = DEFAULT_MAX_CORE_LIMIT; /** The core limit read from the configuration file. */
     
+    private static final int FIELD_WIDTH             = 21;
+    private static final int CORE_OUTPUT_FIELD_WIDTH = 11;
+    
     public static final int WINDOW_WIDTH  = 300;
-    public static final int WINDOW_HEIGHT = 480;
+    public static final int WINDOW_HEIGHT = 600;
     
     public static final long nonceOffset = 10000000;
     
@@ -37,11 +42,11 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public JLabel minerID_fieldLabel    = null;
     public JTextField minerID_textField = null;
     
+    public JTextField blockTextField   = null;
     public JTextField balanceTextField = null;
     public JTextField speedTextField   = null; /** This is for only the first thread! It is multiplied by the number of threads to estimate the actual speed. */
     
-    public JTextArea   outputTextArea   = null;
-    public JScrollPane outputScrollPane = null;
+    private final ArrayList<JTextField> clusterMinerOutputFields;
     
     public JButton beginMiningButton = null;
     public JButton stopMiningButton  = null;
@@ -56,7 +61,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         setResizable (false);
         setDefaultCloseOperation (EXIT_ON_CLOSE);
         
-        setLayout (new FlowLayout (FlowLayout.LEADING, 30, 10));
+        setLayout (new FlowLayout (FlowLayout.LEADING, 30, 3));
         
         /**
          * Read the configuration file for the configured core limit, if there
@@ -64,22 +69,42 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
          */
         configuredCoreLimit = Utils.getConfiguredCoreLimit();
         
+        /**
+         * Initialize all of the panel components that we'll be using.
+         */
         minerID_fieldLabel = new JLabel ("Krist Address");
-        minerID_textField  = new JTextField (21);
+        minerID_textField  = new JTextField (FIELD_WIDTH);
         
-        balanceTextField = new JTextField (21);
-        speedTextField   = new JTextField (21);
+        balanceTextField = new JTextField (FIELD_WIDTH);
+        speedTextField   = new JTextField (FIELD_WIDTH);
+        blockTextField   = new JTextField (FIELD_WIDTH);
         
-        outputTextArea   = new JTextArea (10, 20);
-        outputScrollPane = new JScrollPane (outputTextArea);
-
-        coreUseCheckBoxes = new ArrayList();
+        clusterMinerOutputFields = new ArrayList();
+        coreUseCheckBoxes        = new ArrayList();
+        
+        /*
+            Spawn as many output text fields as there are possible miner threads.
+            
+            However, if the field won't be used because it exceeds the configured
+            limit, then we'll just fill it with an 'N\A.'
+        */
+        for (int outputFieldIndex = 0; outputFieldIndex < MAX_CORE_LIMIT; outputFieldIndex++)
+        {
+            JTextField minerOutputField = new JTextField (CORE_OUTPUT_FIELD_WIDTH);
+            minerOutputField.setBorder (BorderFactory.createTitledBorder (BorderFactory.createLoweredSoftBevelBorder(), "Core " + (outputFieldIndex + 1) + " Nonce"));
+            minerOutputField.setEditable (false);
+            minerOutputField.setText (outputFieldIndex < configuredCoreLimit ? "Not in use." : "Not available.");
+            
+            clusterMinerOutputFields.add (minerOutputField);
+        }
         
         // This creates 6 core options. This is for the sake of the display
         // being uninterrupted; some machines will have more or less cores.
-        for (int core = 0; core < 8; core++)
+        for (int core = 0; core < MAX_CORE_LIMIT; core++)
         {
-            coreUseCheckBoxes.add (new JCheckBox ("Core " + (core + 1)));
+            JCheckBox coreCheckBox = new JCheckBox ("Core " + (core + 1));
+            
+            coreUseCheckBoxes.add (coreCheckBox);
             
             // Prevent the user from using all of their cores.
             if (core >= configuredCoreLimit)
@@ -99,14 +124,12 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         coreUseCheckBoxes.get (0).setEnabled (false);
         
         balanceTextField.setEditable (false);
+        balanceTextField.setBorder (BorderFactory.createTitledBorder ("Balance"));
         speedTextField.setEditable (false);
-        speedTextField.setText ("Hashes/s: 0");
-        
-        outputTextArea.setEditable (false);
-        // Make sure that the scroll pane moves as the output moves out of view. This looks like automatic scrolling.
-        ((DefaultCaret) outputTextArea.getCaret()).setUpdatePolicy (DefaultCaret.ALWAYS_UPDATE);
-        outputScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        outputScrollPane.setAlignmentY (RIGHT_ALIGNMENT);
+        speedTextField.setBorder (BorderFactory.createTitledBorder ("Speed (Hashes/s)"));
+        speedTextField.setText ("0");
+        blockTextField.setEditable (false);
+        blockTextField.setBorder (BorderFactory.createTitledBorder ("Block"));
         
         beginMiningButton = new JButton ("Begin Mining");
         stopMiningButton  = new JButton ("Stop Mining");
@@ -120,14 +143,16 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         add (minerID_textField);
         add (balanceTextField);
         add (speedTextField);
+        add (blockTextField);
         add (beginMiningButton);
         add (stopMiningButton);
-        add (outputScrollPane);
         
-        // Add the check boxes for each core we can use.
-        for (JCheckBox coreCheckBox : coreUseCheckBoxes)
+        // Add the output fields for all possible threads along with their
+        // usage check boxes.
+        for (int minerIndex = 0; minerIndex < MAX_CORE_LIMIT; minerIndex++)
         {
-            add (coreCheckBox);
+            add (clusterMinerOutputFields.get (minerIndex));
+            add (coreUseCheckBoxes.get (minerIndex));
         }
         
         miners = new ArrayList();
@@ -161,22 +186,17 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             // Not a valid miner ID: The field is empty.
             if (!Utils.isMinerValid (minerID_textField.getText()))
             {
-                minerID_textField.setText ("Invalid ID.");
-                outputTextArea.setText ("If you think this is\na mistake, then there\n"
-                                      + "may have been a\nconnection timeout error.\n"
-                                      + "If so, please restart\nthe program.");
+                minerID_textField.setText ("Invalid ID or timeout.");
             }
             // Begin mining. Make sure we're not already mining, though.
             else if (!isMining)
             {
-                addOutputLine ("\nMining started.\nRetrieving block...");
                 startMining();
             }
         }
         else if (componentName.equals ("mining.stop"))
         {
             stopMining();
-            outputTextArea.setText ("");
         }
     }
     
@@ -191,10 +211,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             if (miner.hasSolvedBlock())
             {
                 // Move on to the next cluster if we've solved the problem.
-                // Clear the text area, too.
                 stopMining();
-                outputTextArea.setText ("");
-                addOutputLine ("Solved block " + miner.getBlock());
                 
                 updateBalanceField();
                 startMining();
@@ -210,14 +227,10 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             
             if (miners.get (0).getCurrentBlock().equals (Utils.getLastBlock()))
             {
-                addOutputLine ("\nCould not find solution. Starting at new offset.");
                 startMining (miners.get (miners.size() - 1).getNonce());
             }
-            
             else
             {
-                outputTextArea.setText ("");
-                addOutputLine ("Block changed. Moving on to next block.");
                 startMining();
             }
         }
@@ -233,17 +246,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             balance = Utils.getBalance (minerID_textField.getText());
         }
         
-        balanceTextField.setText ("Balance: " + balance + " KST");
-    }
-    
-    public void addOutputLine (String line)
-    {
-        if (outputTextArea.getLineCount() >= 9)
-        {
-            outputTextArea.setText ("");
-        }
-        
-        outputTextArea.setText (outputTextArea.getText() + line + "\n");
+        balanceTextField.setText (balance + " KST");
     }
     
     public String getMinerID()
@@ -275,12 +278,13 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             finishedMiners = 0;
             
             String block = Utils.getLastBlock();
+            blockTextField.setText (block);
             
             for (int miner = 0; miner < configuredCoreLimit; miner++)
             {
                 if (coreUseCheckBoxes.get (miner).isSelected())
                 {
-                    miners.add (new ClusterMiner (this, minerID_textField.getText(), block, startingNonce + nonceOffset * miner));
+                    miners.add (new ClusterMiner (this, clusterMinerOutputFields.get (miner), minerID_textField.getText(), block, startingNonce + nonceOffset * miner));
                     new Thread (miners.get (miner)).start();
                 }
             }
@@ -308,7 +312,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     {
         if (isMining)
         {
-            addOutputLine ("Mining stopped.");
+            blockTextField.setText ("");
             isMining = false;
         }
     }
