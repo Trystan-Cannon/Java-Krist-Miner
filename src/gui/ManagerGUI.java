@@ -1,7 +1,6 @@
 package gui;
 
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public static final long nonceOffset = 10000000;
     
     private ArrayList<ClusterMiner> miners = null;
-    private volatile boolean isMining      = false;
+    private boolean isMining               = false;
     private int     finishedMiners         = 0;
     
     public JLabel minerID_fieldLabel    = null;
@@ -219,6 +218,11 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
                 startMining();
             }
         }
+    }
+    
+    public synchronized void updateSpeedField (long speed)
+    {
+        speedTextField.setText ("" + speed);
     }
     
     public void updateBlocksMinedField()

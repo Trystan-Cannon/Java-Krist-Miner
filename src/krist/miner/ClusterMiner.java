@@ -1,26 +1,25 @@
 package krist.miner;
 
 import gui.ManagerGUI;
-import javax.swing.JTextField;
 
 public class ClusterMiner implements Runnable
 {
     private final String     block;
     private final ManagerGUI gui;
     private final String     minerID;
+    private final long       startNonce;
     
     private long    nonce;
-    private int     speed;
     private boolean isComplete;
     private boolean solvedBlock;
     
     public ClusterMiner (ManagerGUI gui, String minerID, String block, long nonce)
     {
-        this.gui     = gui;
-        this.minerID = minerID;
-        this.nonce   = nonce;
-        this.speed   = 0;
-        this.block   = block;
+        this.gui        = gui;
+        this.minerID    = minerID;
+        this.startNonce = nonce;
+        this.nonce      = nonce;
+        this.block      = block;
     }
     
     @Override
@@ -28,11 +27,7 @@ public class ClusterMiner implements Runnable
     {
         // Informat the manager that we're ready to begin mining.
         gui.signifyMinerReady (this);
-        
         String newBlock = Utils.subSHA256(minerID + block + nonce, 12);
-
-        long startTime = System.nanoTime();
-        int lastHash   = 0;
 
         for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo(block) >= 0; hashIteration++, nonce++)
         {
@@ -48,14 +43,6 @@ public class ClusterMiner implements Runnable
             if (!gui.isMining())
             {
                 return;
-            }
-
-            // Calculate speed.
-            if (System.nanoTime() - startTime > 1E9)
-            {
-                speed     = hashIteration - lastHash;
-                lastHash  = hashIteration;
-                startTime = System.nanoTime();
             }
 
             newBlock = Utils.subSHA256(minerID + block + nonce, 12);
@@ -93,13 +80,13 @@ public class ClusterMiner implements Runnable
         return block;
     }
     
-    public long getNonce()
+    public synchronized long getNonce()
     {
         return nonce;
     }
     
-    public int getSpeed()
+    public synchronized long getStartNonce()
     {
-        return speed;
+        return startNonce;
     }
 }
