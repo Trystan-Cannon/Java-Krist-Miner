@@ -170,6 +170,7 @@ public class Utils
                     // values.
                     if (configuredCoreLimit >= ManagerGUI.DEFAULT_MAX_CORE_LIMIT && configuredCoreLimit <= ManagerGUI.MAX_CORE_LIMIT)
                     {
+                        reader.close();
                         return configuredCoreLimit;
                     }
                 }
