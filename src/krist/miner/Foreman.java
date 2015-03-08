@@ -8,16 +8,22 @@ public class Foreman implements Runnable
     private final ManagerGUI gui;
     private final ArrayList<ClusterMiner> miners;
     
-    public Foreman(ManagerGUI gui, ArrayList<ClusterMiner> miners)
+    private int secondsElapsed;
+    private volatile boolean isMining;
+    
+    public Foreman (ManagerGUI gui, ArrayList<ClusterMiner> miners)
     {
         this.gui = gui;
         this.miners = miners;
+        
+        this.secondsElapsed = 0;
+        this.isMining       = true;
     }
     
     @Override
     public void run()
     {
-        while (gui.isMining())
+        while (isMining)
         {
             try
             {
@@ -30,16 +36,23 @@ public class Foreman implements Runnable
             {
                 System.out.println("Foreman failed to sleep.");
             }
+            secondsElapsed++;
             
-            int speed = 0;
+            long speed = 0;
             for (ClusterMiner miner : miners)
             {
-                speed += miner.getSpeed();
+                speed += (miner.getNonce() - miner.getStartNonce()) / secondsElapsed;
             }
             
-            gui.speedTextField.setText("" + speed);
+            gui.updateSpeedField (speed);
         }
         
-        gui.speedTextField.setText("0");
+        gui.updateSpeedField (0);
+    }
+    
+    public synchronized void stopMining()
+    {
+        System.out.println ("Foreman " + this + " stopped.");
+        isMining = false;
     }
 }
