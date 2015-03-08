@@ -1,9 +1,7 @@
 package krist.miner;
 
-import com.google.common.base.Charsets;
-import com.google.common.hash.Hashing;
 import gui.ManagerGUI;
-import java.awt.Frame;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,9 +10,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
 
 
 public class Utils
@@ -62,6 +65,9 @@ public class Utils
     
     public static boolean isMinerValid(String minerID)
     {
+        //Look, it's not 10 characters! DEFINITELY VALID! (Taras's server doesn't catch this.)
+        if(minerID.length() != 10) return false;
+        
         ArrayList<String> minerValidity = getPage(BALANCE_LINK_BASE + minerID);
         
         // Error retrieving page data.
@@ -76,7 +82,7 @@ public class Utils
             InputStream pageInputStream = lastBlockURL.openStream();
             BufferedReader pageReader = new BufferedReader(new InputStreamReader(pageInputStream));
             
-            ArrayList<String> lines = new ArrayList();
+            ArrayList<String> lines = new ArrayList<String>();
             String line;
             
             while ((line = pageReader.readLine()) != null)
@@ -88,11 +94,11 @@ public class Utils
         }
         catch (MalformedURLException malformedException)
         {
-            System.out.println(malformedException.getMessage());
+            System.err.println(malformedException.getMessage());
         }
         catch (IOException ioException)
         {
-            System.out.println(ioException.getMessage());
+            System.err.println(ioException.getMessage());
         }
         
         return null;
@@ -131,7 +137,7 @@ public class Utils
             }
             catch (IOException failureReport)
             {
-                System.out.println("Failed to create new configuration file.");
+                System.err.println("Failed to create new configuration file.");
             }
         }
         
@@ -169,12 +175,12 @@ public class Utils
                 }
                 catch (Exception conversionFailureReport)
                 {
-                    System.out.println("Failed to convert configured core limit to integer.");
+                    System.err.println("Failed to convert configured core limit to integer.");
                 }
             }
             catch (IOException failureReport)
             {
-                System.out.println("Failed to read configuration core limit from existing file.");
+                System.err.println("Failed to read configuration core limit from existing file.");
             }
         }
         else
@@ -183,5 +189,46 @@ public class Utils
         }
         
         return ManagerGUI.DEFAULT_MAX_CORE_LIMIT;
+    }
+    
+    /**
+     * Generates a Krist v2 address using the original algorithm.
+     * This was direclty ported from the KristWallet source (release 8).
+     * @param key
+     *  KristWallet password
+     * @return Krist address
+     */
+    public static String generateAddress(String key) {
+        String masterKey = Utils.subSHA256("KRISTWALLET" + key, 64) + "-000";
+        
+        HashMap<Long, String> protein = new HashMap<Long, String>(); //local protein = {}
+        String stick = subSHA256(subSHA256(masterKey, 64), 64);   //local stick = sha256(sha256(key))
+        long link = 0;
+        String v2 = "k"; //All keys start with 'k'. Bad design in my opinion, but whatever.
+        
+        for (long n = 0; n < 9; n++) { //repeat...until n == 9
+            protein.put(n, stick.substring(0, 2)); //if n < 9 then protein[n] = string.sub(stick,0,2)
+            stick = subSHA256(subSHA256(stick, 64), 64); //stick = sha256(sha256(stick)) end
+        }
+        
+        int n = 0;
+        while (n < 9) {
+            link = Long.parseLong(new BigInteger(stick.substring(2 * n, 2 * n + 2), 16).toString()) % 9; //link = tonumber( string.sub( stick,1+(2*n),2+(2*n) ),16 ) % 9
+            if (protein.get(link).length() != 0) { //if string.len(protein[link]) ~= 0 then
+                v2 += hextobase36(new BigInteger(protein.get(link), 16)); //v2 = v2 .. hextobase36(tonumber(protein[link],16))
+                protein.put(link, ""); //protein[link] = ''
+                n++;
+            } else stick = subSHA256(stick, 64); //stick = sha256(stick)
+        }
+        return v2;
+    }
+    
+    //Thanks Grim Reaper
+    private static String hextobase36(BigInteger number) {
+        for (int i = 6; i <= 251; i += 7)
+            if (number.compareTo(new BigInteger("" + i)) <= 0)
+                if (i <= 69) return (char) ('0' + (i - 6) / 7) + "";
+                else         return (char) ('a' + ((i - 76) / 7)) + "";
+        return "e";
     }
 }

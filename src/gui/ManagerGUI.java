@@ -4,12 +4,17 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+
 import krist.miner.ClusterMiner;
 import krist.miner.Foreman;
 import krist.miner.MiningListener;
@@ -17,6 +22,9 @@ import krist.miner.Utils;
 
 public final class ManagerGUI extends JFrame implements ActionListener, MiningListener
 {
+    //Required by Serializable.
+    private static final long serialVersionUID = -5311357941579647387L;
+    
     public static final int DEFAULT_MAX_CORE_LIMIT = 1;
     public static final int MAX_CORE_LIMIT = 8;
     
@@ -24,7 +32,6 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     /** The core limit read from the configuration file. */
     
     private static final int FIELD_WIDTH = 21;
-    private static final int CORE_OUTPUT_FIELD_WIDTH = 11;
     
     public static final int WINDOW_WIDTH  = 300;
     public static final int WINDOW_HEIGHT = 360;
@@ -55,6 +62,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     public JButton stopMiningButton = null;
     
     public ArrayList<JCheckBox> coreUseCheckBoxes = null;
+    public JButton btnGenerateAddress;
     
     public ManagerGUI()
     {
@@ -64,7 +72,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         
-        setLayout(new FlowLayout(FlowLayout.LEADING, 30, 3));
+        getContentPane().setLayout(new FlowLayout(FlowLayout.LEADING, 30, 3));
         
         /**
          * Read the configuration file for the configured core limit, if there
@@ -83,7 +91,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         blockTextField   = new JTextField (FIELD_WIDTH);
         blocksMinedField = new JTextField (FIELD_WIDTH);
         
-        coreUseCheckBoxes = new ArrayList();
+        coreUseCheckBoxes = new ArrayList<JCheckBox>();
         
         // This creates 6 core options. This is for the sake of the display
         // being uninterrupted; some machines will have more or less cores.
@@ -129,22 +137,27 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         beginMiningButton.addActionListener(this);
         stopMiningButton.addActionListener(this);
         
-        add (minerID_fieldLabel);
-        add (minerID_textField);
-        add (balanceTextField);
-        add (speedTextField);
-        add (blockTextField);
-        add (blocksMinedField);
-        add (beginMiningButton);
-        add (stopMiningButton);
+        getContentPane().add(minerID_fieldLabel);
+        getContentPane().add(minerID_textField);
+        
+        btnGenerateAddress = new JButton("Gen");
+        btnGenerateAddress.setActionCommand("address.generate");
+        btnGenerateAddress.addActionListener(this);
+        
+        getContentPane().add(btnGenerateAddress);
+        getContentPane().add(balanceTextField);
+        getContentPane().add(speedTextField);
+        getContentPane().add(blockTextField);
+        getContentPane().add(beginMiningButton);
+        getContentPane().add(stopMiningButton);
         
         // Add the use check boxes for each core.
         for (int minerIndex = 0; minerIndex < MAX_CORE_LIMIT; minerIndex++)
         {
-            add (coreUseCheckBoxes.get (minerIndex));
+            getContentPane().add(coreUseCheckBoxes.get(minerIndex));
         }
         
-        miners = new ArrayList();
+        miners = new ArrayList<ClusterMiner>();
     }
     
     /**
@@ -171,22 +184,36 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
     {
         String componentName = actionEvent.getActionCommand();
         
-        if (componentName.equals("mining.start"))
-        {
+        switch (componentName) {
+        case "mining.start":
             // Not a valid miner ID: The field is empty.
-            if (!Utils.isMinerValid(minerID_textField.getText()))
-            {
+            if (!Utils.isMinerValid(getMinerID()))
                 minerID_textField.setText("Invalid ID or timeout.");
-            }
-            // Begin mining. Make sure we're not already mining, though.
             else if (!isMining)
-            {
+                // Begin mining. Make sure we're not already mining, though.
                 startMining();
-            }
-        }
-        else if (componentName.equals("mining.stop"))
-        {
+            break;
+        case "mining.stop":
             stopMining();
+            break;
+        case "address.generate":
+            JPanel dialogPanel = new JPanel();
+            dialogPanel.add(new JLabel("Please enter your Krist address password: "));
+            JPasswordField passField = new JPasswordField(32);
+            dialogPanel.add(passField);
+            String[] options = new String[] {"Generate", "Cancel"};
+            
+            int cancel = JOptionPane.showOptionDialog(this, dialogPanel, "Generate address", JOptionPane.NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+            
+            if(cancel == 1) break;
+            
+            String password = String.valueOf(passField.getPassword());
+            if(password == null || password.length() == 0) break;
+            minerID_textField.setText(Utils.generateAddress(password));
+            
+            break;
+        default:
+            break;
         }
     }
     
@@ -275,7 +302,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             updateBalanceField();
             
             // Destroy the old miner threads.
-            miners = new ArrayList();
+            miners = new ArrayList<ClusterMiner>();
             
             isMining = true;
             finishedMiners = 0;

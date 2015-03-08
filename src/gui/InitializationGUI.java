@@ -8,6 +8,8 @@ import javax.swing.JLabel;
 import krist.miner.Utils;
 
 public class InitializationGUI extends JFrame {
+    private static final long serialVersionUID = 3350353049316277825L;
+    
     public static final int WINDOW_WIDTH = 200;
     public static final int WINDOW_HEIGHT = 100;
     
