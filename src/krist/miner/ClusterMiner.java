@@ -25,14 +25,19 @@ public class ClusterMiner implements Runnable
     @Override
     public void run()
     {
-        // Informat the manager that we're ready to begin mining.
+        // Inform the manager that we're ready to begin mining.
         gui.signifyMinerReady (this);
-        String newBlock = Utils.subSHA256(minerID + block + nonce, 12);
-
-        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo(block) >= 0; hashIteration++, nonce++)
+        final String miningBlock = minerID + block;
+        final long workLong = Long.parseLong(Utils.getWork());
+        
+        String newBlock = Utils.subSHA256(miningBlock + nonce, 12);
+        long newBlockLong = Long.parseLong(newBlock, 16);
+        
+        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlockLong >= workLong; hashIteration++, nonce++)
         {
             /**
              * This is shit design.
+             * 
              * @see<code>ManagerGUI.onMineCompletion</code>.
              *
              * If this doesn't happen, then when the mining is force stopped,
@@ -44,18 +49,20 @@ public class ClusterMiner implements Runnable
             {
                 return;
             }
-
-            newBlock = Utils.subSHA256(minerID + block + nonce, 12);
+            newBlock = Utils.subSHA256(miningBlock + nonce, 12);
+            newBlockLong = Long.parseLong(newBlock, 16);
         }
-
-        if (newBlock.compareTo(block) < 0)
+        
+        if (newBlockLong < workLong)
         {
             Utils.submitSolution(minerID, nonce - 1);
             solvedBlock = true;
-
+            
+            System.out.println("Got solution "+newBlock+ " for "+block);
+            
             gui.stopMining();
         }
-
+        
         gui.onMineCompletion(this);
         isComplete = true;
     }

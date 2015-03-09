@@ -13,7 +13,7 @@ public class Foreman implements Runnable
     
     public Foreman (ManagerGUI gui, ArrayList<ClusterMiner> miners)
     {
-        this.gui    = gui;
+        this.gui = gui;
         this.miners = miners;
         
         this.secondsElapsed = 0;
@@ -29,12 +29,12 @@ public class Foreman implements Runnable
             {
                 synchronized (this)
                 {
-                    wait (1000);
+                    wait(1000);
                 }
             }
             catch (InterruptedException sleepFailure)
             {
-                System.out.println ("Foreman failed to sleep.");
+                System.err.println("Foreman failed to sleep.");
             }
             secondsElapsed++;
             
@@ -52,7 +52,7 @@ public class Foreman implements Runnable
     
     public synchronized void stopMining()
     {
-        System.out.println ("Foreman " + this + " stopped.");
+        //System.out.println ("Foreman " + this + " stopped.");
         isMining = false;
     }
 }
