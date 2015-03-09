@@ -25,11 +25,13 @@ public class ClusterMiner implements Runnable
     @Override
     public void run()
     {
-        // Informat the manager that we're ready to begin mining.
+        // Inform the manager that we're ready to begin mining.
         gui.signifyMinerReady (this);
         String newBlock = Utils.subSHA256(minerID + block + nonce, 12);
+        long newBlockLong = Long.parseLong(newBlock, 16);
+        final long blockLong = Long.parseLong(block, 16);
         
-        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo(block) >= 0; hashIteration++, nonce++)
+        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlockLong >= blockLong; hashIteration++, nonce++)
         {
             /**
              * This is shit design.
@@ -46,9 +48,10 @@ public class ClusterMiner implements Runnable
                 return;
             }
             newBlock = Utils.subSHA256(minerID + block + nonce, 12);
+            newBlockLong = Long.parseLong(block, 16);
         }
         
-        if (newBlock.compareTo(block) < 0)
+        if (newBlockLong < blockLong)
         {
             Utils.submitSolution(minerID, nonce - 1);
             solvedBlock = true;
