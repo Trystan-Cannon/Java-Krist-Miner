@@ -28,7 +28,7 @@ public class ClusterMiner implements Runnable
         // Informat the manager that we're ready to begin mining.
         gui.signifyMinerReady (this);
         String newBlock = Utils.subSHA256(minerID + block + nonce, 12);
-
+        
         for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo(block) >= 0; hashIteration++, nonce++)
         {
             /**
@@ -52,6 +52,8 @@ public class ClusterMiner implements Runnable
         {
             Utils.submitSolution(minerID, nonce - 1);
             solvedBlock = true;
+            
+            System.out.println("Got solution "+newBlock+ " for "+block);
             
             gui.stopMining();
         }

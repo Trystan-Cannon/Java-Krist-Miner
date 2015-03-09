@@ -34,7 +34,7 @@ public class Foreman implements Runnable
             }
             catch (InterruptedException sleepFailure)
             {
-                System.out.println("Foreman failed to sleep.");
+                System.err.println("Foreman failed to sleep.");
             }
             secondsElapsed++;
             
@@ -52,7 +52,7 @@ public class Foreman implements Runnable
     
     public synchronized void stopMining()
     {
-        System.out.println ("Foreman " + this + " stopped.");
+        //System.out.println ("Foreman " + this + " stopped.");
         isMining = false;
     }
 }

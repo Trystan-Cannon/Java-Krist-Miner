@@ -245,7 +245,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         {
             stopMining();
             
-            if (miners.get(0).getCurrentBlock().equals(Utils.getLastBlock()))
+            if (miners.get(0).getCurrentBlock().equals(Utils.getWorkBlock()))
             {
                 startMining(miners.get(miners.size() - 1).getNonce());
             }
@@ -307,7 +307,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             isMining = true;
             finishedMiners = 0;
             
-            String block = Utils.getLastBlock();
+            String block = String.format("%012x", Integer.valueOf(Utils.getWorkBlock()));
             blockTextField.setText(block);
             
             for (int miner = 0; miner < configuredCoreLimit; miner++)
