@@ -27,11 +27,13 @@ public class ClusterMiner implements Runnable
     {
         // Inform the manager that we're ready to begin mining.
         gui.signifyMinerReady (this);
-        String newBlock = Utils.subSHA256(minerID + block + nonce, 12);
-        long newBlockLong = Long.parseLong(newBlock, 16);
-        final long blockLong = Long.parseLong(block, 16);
+        final String miningBlock = minerID + block;
+        final long workLong = Long.parseLong(Utils.getWork());
         
-        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlockLong >= blockLong; hashIteration++, nonce++)
+        String newBlock = Utils.subSHA256(miningBlock + nonce, 12);
+        long newBlockLong = Long.parseLong(newBlock, 16);
+        
+        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlockLong >= workLong; hashIteration++, nonce++)
         {
             /**
              * This is shit design.
@@ -47,11 +49,11 @@ public class ClusterMiner implements Runnable
             {
                 return;
             }
-            newBlock = Utils.subSHA256(minerID + block + nonce, 12);
-            newBlockLong = Long.parseLong(block, 16);
+            newBlock = Utils.subSHA256(miningBlock + nonce, 12);
+            newBlockLong = Long.parseLong(newBlock, 16);
         }
         
-        if (newBlockLong < blockLong)
+        if (newBlockLong < workLong)
         {
             Utils.submitSolution(minerID, nonce - 1);
             solvedBlock = true;

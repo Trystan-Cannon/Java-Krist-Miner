@@ -245,7 +245,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
         {
             stopMining();
             
-            if (miners.get(0).getCurrentBlock().equals(Utils.getWorkBlock()))
+            if (miners.get(0).getCurrentBlock().equals(Utils.getWork()))
             {
                 startMining(miners.get(miners.size() - 1).getNonce());
             }
@@ -307,20 +307,24 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
             isMining = true;
             finishedMiners = 0;
             
-            String block = String.format("%012x", Integer.valueOf(Utils.getWorkBlock()));
+            String block = Utils.getLastBlock();
             blockTextField.setText(block);
             
             for (int miner = 0; miner < configuredCoreLimit; miner++)
             {
                 if (coreUseCheckBoxes.get(miner).isSelected())
                 {
-                    miners.add (new ClusterMiner (this, minerID_textField.getText(), block, startingNonce + nonceOffset * miner));
-                    new Thread (miners.get (miner)).start();
+                    ClusterMiner newMiner = new ClusterMiner (this, minerID_textField.getText(), block, startingNonce + nonceOffset * miner);
+                    miners.add (newMiner);
+                    Thread mThread = new Thread (newMiner);
+                    mThread.setPriority(Thread.MAX_PRIORITY);
+                    mThread.start();
                 }
             }
             
             foreman = new Foreman (this, miners);
-            new Thread (foreman).start();
+            Thread fthread = new Thread (foreman);
+            fthread.start();
             
             try
             {
