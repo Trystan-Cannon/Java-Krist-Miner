@@ -116,7 +116,8 @@ public class Utils
      */
     public static String subSHA256 (String data, int endIndex)
     {
-        return Hashing.sha256().hashString (data, Charsets.UTF_8).toString().substring (0, endIndex);
+        return SHA256.bytesToHex (SHA256.digest(data.getBytes())).substring (0, endIndex);
+        // return Hashing.sha256().hashString (data, Charsets.UTF_8).toString().substring (0, endIndex);
     }
     
     /**

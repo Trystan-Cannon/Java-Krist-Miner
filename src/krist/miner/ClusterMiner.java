@@ -5,7 +5,7 @@ import java.math.BigInteger;
 
 public class ClusterMiner implements Runnable
 {
-    private final BigInteger target;
+    private final long       target;
     private final String     block;
     private final ManagerGUI gui;
     private final String     minerID;
@@ -21,7 +21,7 @@ public class ClusterMiner implements Runnable
         this.minerID    = minerID;
         this.startNonce = nonce;
         this.nonce      = nonce;
-        this.target     = new BigInteger ("" + target);
+        this.target     = target;
         this.block      = block;
     }
     
@@ -38,7 +38,7 @@ public class ClusterMiner implements Runnable
     {
         // Inform the manager that we're ready to begin mining.
         gui.signifyMinerReady (this);
-        String newBlock;
+        long newBlock;
 
         for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset; hashIteration++, nonce++)
         {
@@ -56,15 +56,15 @@ public class ClusterMiner implements Runnable
                 return;
             }
 
-            newBlock = Utils.subSHA256(minerID + block + nonce, 12);
+            newBlock = Long.parseLong (Utils.subSHA256(minerID + block + nonce, 12), 16);
             
             /**
              * Calculated a smaller hash? Submit it, take our hard earned KST,
              * and get mining on the next block.
              */
-            if (new BigInteger (newBlock, 16).compareTo (target) == -1)
+            if (newBlock < target)
             {
-                Utils.submitSolution(minerID, nonce - 1);
+                Utils.submitSolution(minerID, nonce);
                 solvedBlock = true;
 
                 gui.stopMining();
