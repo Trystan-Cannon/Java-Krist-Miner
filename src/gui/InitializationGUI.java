@@ -3,6 +3,8 @@ package gui;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.math.BigInteger;
+import java.util.HashMap;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import krist.miner.Utils;

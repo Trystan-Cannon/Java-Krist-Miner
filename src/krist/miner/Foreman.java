@@ -21,6 +21,13 @@ public class Foreman implements Runnable
     }
     
     @Override
+    /**
+     * Computes the hash rate of all of the miners contained within
+     * <code>this.miners</code>, updating the ManagerGUI's hash rate
+     * field.
+     * 
+     * The calculation is performed approximately every 1 second.
+     */
     public void run()
     {
         while (isMining)
@@ -41,7 +48,7 @@ public class Foreman implements Runnable
             long speed = 0;
             for (ClusterMiner miner : miners)
             {
-                speed += (miner.getNonce() - miner.getStartNonce()) / secondsElapsed;
+                speed += miner.getChangeInNonce() / secondsElapsed;
             }
             
             gui.updateSpeedField (speed);
@@ -50,9 +57,15 @@ public class Foreman implements Runnable
         gui.updateSpeedField (0);
     }
     
+    /**
+     * Stops the foreman from working, killing its thread.
+     * 
+     * This is necessary because the foreman will synchronize on itself
+     * in its <code>run</code> method, so it may not be checking if the
+     * ManagerGUI has stopped before starting to mine at new offsets.
+     */
     public synchronized void stopMining()
     {
-        System.out.println ("Foreman " + this + " stopped.");
         isMining = false;
     }
 }

@@ -1,9 +1,11 @@
 package krist.miner;
 
 import gui.ManagerGUI;
+import java.math.BigInteger;
 
 public class ClusterMiner implements Runnable
 {
+    private final BigInteger target;
     private final String     block;
     private final ManagerGUI gui;
     private final String     minerID;
@@ -13,23 +15,32 @@ public class ClusterMiner implements Runnable
     private boolean isComplete;
     private boolean solvedBlock;
     
-    public ClusterMiner (ManagerGUI gui, String minerID, String block, long nonce)
+    public ClusterMiner (ManagerGUI gui, String minerID, String block, long target, long nonce)
     {
         this.gui        = gui;
         this.minerID    = minerID;
         this.startNonce = nonce;
         this.nonce      = nonce;
+        this.target     = new BigInteger ("" + target);
         this.block      = block;
     }
     
     @Override
+    /**
+     * "Mines" the current target as determined by krist's getwork function.
+     * @see <code>Utils.getWork</code>.
+     * 
+     * The mining is performed by using an incremented 'nonce,' a single long
+     * integer, and concatenating to the end of the user's krist address and
+     * the last block.
+     */
     public void run()
     {
-        // Informat the manager that we're ready to begin mining.
+        // Inform the manager that we're ready to begin mining.
         gui.signifyMinerReady (this);
-        String newBlock = Utils.subSHA256(minerID + block + nonce, 12);
+        String newBlock;
 
-        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset && newBlock.compareTo(block) >= 0; hashIteration++, nonce++)
+        for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset; hashIteration++, nonce++)
         {
             /**
              * This is shit design.
@@ -46,47 +57,53 @@ public class ClusterMiner implements Runnable
             }
 
             newBlock = Utils.subSHA256(minerID + block + nonce, 12);
+            
+            /**
+             * Calculated a smaller hash? Submit it, take our hard earned KST,
+             * and get mining on the next block.
+             */
+            if (new BigInteger (newBlock, 16).compareTo (target) == -1)
+            {
+                Utils.submitSolution(minerID, nonce - 1);
+                solvedBlock = true;
+
+                gui.stopMining();
+                break;
+            }
         }
 
-        if (newBlock.compareTo(block) < 0)
-        {
-            Utils.submitSolution(minerID, nonce - 1);
-            solvedBlock = true;
-
-            gui.stopMining();
-        }
-
-        gui.onMineCompletion(this);
         isComplete = true;
+        gui.onMineCompletion(this);
     }
     
-    public String getBlock()
-    {
-        return block;
-    }
-    
-    public boolean isComplete()
-    {
-        return isComplete;
-    }
-    
+    /**
+     * Checks whether or not this miner has solved the block that
+     * it was given upon instantiation.
+     * 
+     * @return Whether or not this miner has solved its block.
+     */
     public boolean hasSolvedBlock()
     {
         return solvedBlock;
     }
     
-    public String getCurrentBlock()
+    /**
+     * Calculates the change in nonces that this miner has made as a way
+     * to measure its progress and, consequently, hash rate.
+     * 
+     * @return The difference between this miner's starting nonce and current nonce.
+     */
+    public synchronized long getChangeInNonce()
     {
-        return block;
+        return nonce - startNonce;
     }
     
-    public synchronized long getNonce()
+    /**
+     * @return The current nonce of this miner. Used to compute the next offset
+     * at which the miner should start its next batch of <code>ClusterMiner</code> threads.
+     */
+    public long getNonce()
     {
         return nonce;
-    }
-    
-    public synchronized long getStartNonce()
-    {
-        return startNonce;
     }
 }
