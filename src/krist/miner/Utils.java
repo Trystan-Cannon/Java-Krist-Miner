@@ -30,10 +30,11 @@ public class Utils
      */
     private static final String CONFIG_FILE_PATH = "config.txt";
     
-    private static final String KRIST_SYNC_LINK   = getPage ("https://raw.githubusercontent.com/BTCTaras/kristwallet/master/staticapi/syncNode").get (0) + "?";
-    private static final String LAST_BLOCK_LINK   = KRIST_SYNC_LINK + "lastblock";
-    private static final String GET_WORK_LINK     = KRIST_SYNC_LINK + "getwork";
+    private static final String KRIST_SYNC_LINK = getPage ("https://raw.githubusercontent.com/BTCTaras/kristwallet/master/staticapi/syncNode").get (0) + "?";
+    private static final String LAST_BLOCK_LINK = KRIST_SYNC_LINK + "lastblock";
+    private static final String GET_WORK_LINK = KRIST_SYNC_LINK + "getwork";
     private static final String BALANCE_LINK_BASE = KRIST_SYNC_LINK + "getbalance=";
+    private static final String TRANSACTION_LINK_BASE = KRIST_SYNC_LINK + "pushtx2&q=%s&pkey=%s&amt=%d";
     
     /**
      * Retrieves the last block mined from the krist server.
@@ -50,6 +51,23 @@ public class Utils
         }
         
         return lastBlockPageData.get (0);
+    }
+    
+    /**
+     * Sends the desired amount of KST from the user's account to the recipient
+     * address. Returns true if this is a success, false if not.
+     * 
+     * @param password Krist account password.
+     * @param recipient Recipient address for transaction.
+     * @param amount Amount of KST to send to the recipient.
+     * @return Success of transaction.
+     */
+    public static boolean makeTransaction(String password, String recipient, int amount)
+    {
+        String transactionLink = String.format(TRANSACTION_LINK_BASE, recipient, Utils.subSHA256("KRISTWALLET" + password, 64) + "-000", amount);
+        ArrayList<String> success = getPage(transactionLink);
+        
+        return success != null && !success.isEmpty() && success.get(0).equals("Success");
     }
     
     /**
@@ -293,9 +311,7 @@ public class Utils
             if (lessThanOrEqualTo (number, i))
             {
                 if (i <= 69)
-                {
                     return (char) ('0' + (i - 6) / 7) + "";
-                }
                 
                 return (char) ('a' + ((i - 76) / 7)) + "";
             }
@@ -329,35 +345,6 @@ public class Utils
     {
         // Generate the master key for hashing according to http://pastebin.com/gSTtpjc7
         String masterKey = Utils.subSHA256 ("KRISTWALLET" + password, 64) + "-000";
-        
-        /*
-         * Original Lua function:
-         * 
-         * function makev2address(key)
-         *      local protein = {}
-         *      local stick = sha256(sha256(key))
-         *      local n = 0
-         *      local link = 0
-         *      local v2 = "k"
-         *      repeat
-         *        if n < 9 then protein[n] = string.sub(stick,0,2)
-         *        stick = sha256(sha256(stick)) end
-         *        n = n + 1
-         *      until n == 9
-         *      n = 0
-         *      repeat
-         *        link = tonumber(string.sub(stick,1+(2*n),2+(2*n)),16) % 9
-         *        if string.len(protein[link]) ~= 0 then
-         *          v2 = v2 .. hextobase36(tonumber(protein[link],16))
-         *          protein[link] = ''
-         *          n = n + 1
-         *        else
-         *          stick = sha256(stick)
-         *        end
-         *      until n == 9
-         *      return v2
-         *  end
-         */
         
         HashMap<Long, String> protein = new HashMap();
         String                  stick   = Utils.subSHA256 (Utils.subSHA256(masterKey, 64), 64);

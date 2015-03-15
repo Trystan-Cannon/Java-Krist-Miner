@@ -40,6 +40,13 @@ public class ClusterMiner implements Runnable
         gui.signifyMinerReady (this);
         long newBlock;
 
+        /**
+         * Our target can be converted to its series of bytes. From there, we
+         * only need to compare the first non-zero byte in the calculated hash.
+         * 
+         * How do.
+         */
+        
         for (int hashIteration = 0; hashIteration < ManagerGUI.nonceOffset; hashIteration++, nonce++)
         {
             /**
@@ -56,7 +63,8 @@ public class ClusterMiner implements Runnable
                 return;
             }
 
-            newBlock = Long.parseLong (Utils.subSHA256(minerID + block + nonce, 12), 16);
+            // Use Yevano's method of computing a nonce: convert a long to a base 36 number.
+            newBlock = Long.parseLong (Utils.subSHA256(minerID + block + Long.toString(nonce, 36), 12), 16);
             
             /**
              * Calculated a smaller hash? Submit it, take our hard earned KST,

@@ -3,8 +3,6 @@ package gui;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -301,8 +299,9 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
              * wallet (<code>JMenu walletMenu</code>) menu.
              */
             case "wallet.menu.transactionWindow":
-                // Spawn the transaction window on the left side of us.
-                transactionInterface = new TransactionGUI (this, this.getX() + WINDOW_WIDTH, this.getY());
+                // Ensure there is no other transaction window currently open.
+                if (transactionInterface == null)
+                    transactionInterface = new TransactionGUI (this, this.getX() + WINDOW_WIDTH, this.getY());
                 break;
         }
     }
@@ -398,7 +397,7 @@ public final class ManagerGUI extends JFrame implements ActionListener, MiningLi
      */
     public String getKristAddress()
     {
-        return minerID_textField.getText().length() == 0 ? "N\\A" : minerID_textField.getText();
+        return minerID_textField.getText().length() == 0 ? "\\0" : minerID_textField.getText();
     }
     
     /**
